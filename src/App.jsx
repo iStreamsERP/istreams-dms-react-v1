@@ -15,7 +15,6 @@ import SignUpPage from "./pages/SignUpPage";
 import TaskPage from "./pages/TaskPage";
 import TaskView from "./pages/TaskView";
 import TeamsPage from "./pages/TeamsPage";
-import TimeSheetPage from "./pages/TimeSheetPage";
 import UserAccessRights from "./pages/UserAccessRights";
 import UserListPage from "./pages/UserListPage";
 import UserRole from "./pages/UserRole";
@@ -55,7 +54,6 @@ const App = () => {
             { path: "/document-view", element: <DocumentViewPage /> },
 
             { path: "task-view", element: <TaskView /> },
-            { path: "time-sheet", element: <TimeSheetPage /> },
             { path: "task", element: <TaskPage /> },
             { path: "users", element: <UserListPage /> },
             { path: "user-role", element: <UserRole /> },

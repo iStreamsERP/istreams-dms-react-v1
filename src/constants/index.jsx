@@ -61,11 +61,6 @@ export const getNavbarLinks = (isAdmin) => [
         path: "/task-view",
       },
       {
-        label: "Time Sheet",
-        icon: CalendarClock,
-        path: "/time-sheet",
-      },
-      {
         label: "Task management",
         icon: LayoutDashboard,
         path: "/task",
