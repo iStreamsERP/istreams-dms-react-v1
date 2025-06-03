@@ -1,11 +1,10 @@
 import GlobalSearchInput from "@/components/GlobalSearchInput";
 import { useToast } from "@/hooks/use-toast";
+import { callSoapService } from "@/services/callSoapService";
 import { useEffect, useState } from "react";
 import { BarLoader } from "react-spinners";
 import TeamProfileCard from "../components/TeamProfileCard";
 import { useAuth } from "../contexts/AuthContext";
-import { getEmployeeImage } from "../services/employeeService";
-import { callSoapService } from "@/services/callSoapService";
 
 const TeamsPage = () => {
   const { userData } = useAuth();

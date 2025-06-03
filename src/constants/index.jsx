@@ -50,20 +50,10 @@ export const getNavbarLinks = (isAdmin) => [
         icon: FileSearch,
         path: "/document-view",
       },
-    ],
-  },
-  {
-    title: "Tasks",
-    links: [
       {
         label: "Task View",
         icon: FileCheck2,
         path: "/task-view",
-      },
-      {
-        label: "Task management",
-        icon: LayoutDashboard,
-        path: "/task",
       },
     ],
   },
@@ -99,14 +89,14 @@ export const getNavbarLinks = (isAdmin) => [
                 {
                   label: "Category Access",
                   icon: LibraryBig,
-                  path: "/category-access",
+                  path: "/category-access-rights",
                 },
               ],
             },
             {
-              label: "Category Access Rights",
+              label: "Category Master",
               icon: LibraryBig,
-              path: "/category-list",
+              path: "/category-master",
             },
           ],
         },

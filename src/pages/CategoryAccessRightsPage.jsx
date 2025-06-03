@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover
 import { Check, ChevronsUpDown, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const CategoryAccessPage = () => {
+const CategoryAccessRightsPage = () => {
   const [roleDetails, setRoleDetails] = useState({ ROLE_NAME: "", ROLE_ID: "", ROLE_DESCRIPTION: "" });
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [rolesList, setRolesList] = useState([]);
@@ -492,4 +492,4 @@ const CategoryAccessPage = () => {
   );
 };
 
-export default CategoryAccessPage;
+export default CategoryAccessRightsPage;

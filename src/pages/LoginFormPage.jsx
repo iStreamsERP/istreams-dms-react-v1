@@ -1,5 +1,5 @@
-import logoDark from "@/assets/logo-dark.png";
-import logoLight from "@/assets/logo-light.png";
+import logoDark from "@/assets/logo-dark.jpg";
+import logoLight from "@/assets/logo-light.jpg";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";

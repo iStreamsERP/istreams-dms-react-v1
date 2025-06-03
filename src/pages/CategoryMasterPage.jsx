@@ -1,4 +1,6 @@
-import { CategoryAccessRightsModal } from "@/components/dialog/CategoryAccessRightsModal";
+import {
+  CategoryCreationModal
+} from "@/components/dialog/CategoryCreationModal";
 import GlobalSearchInput from "@/components/GlobalSearchInput";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -21,10 +23,7 @@ import {
 } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import {
-  deleteDataModelService,
-  getDataModelService,
-} from "@/services/dataModelService";
+import { callSoapService } from "@/services/callSoapService";
 import {
   flexRender,
   getCoreRowModel,
@@ -44,7 +43,7 @@ import {
 import { useEffect, useState } from "react";
 import { PacmanLoader } from "react-spinners";
 
-const CategoryListPage = () => {
+const CategoryMasterPage = () => {
   const { userData } = useAuth();
   const { toast } = useToast();
 
@@ -69,17 +68,19 @@ const CategoryListPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const allProductDataPayload = {
+      const payload = {
         DataModelName: "SYNM_DMS_DOC_CATEGORIES",
         WhereCondition: "",
         Orderby: "",
       };
-      const data = await getDataModelService(
-        allProductDataPayload,
-        userData.userEmail,
-        userData.clientURL
+
+      const response = await callSoapService(
+        userData.clientURL,
+        "DataModel_GetData",
+        payload
       );
-      setTableList(data);
+
+      setTableList(response);
     } catch (error) {
       setError(error?.message);
     } finally {
@@ -103,10 +104,10 @@ const CategoryListPage = () => {
         WhereCondition: `CATEGORY_NAME = '${item.CATEGORY_NAME}'`,
       };
 
-      const response = await deleteDataModelService(
-        payload,
-        userData.userEmail,
-        userData.clientURL
+      const response = await callSoapService(
+        userData.clientURL,
+        "DataModel_DeleteData",
+        payload
       );
 
       toast({
@@ -182,50 +183,6 @@ const CategoryListPage = () => {
           title={row.getValue("DISPLAY_NAME") || "-"}
         >
           {row.getValue("DISPLAY_NAME") || "-"}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "MODULE_NAME",
-      header: () => (
-        <p className="truncate" style={{ width: 100 }}>
-          Module Name
-        </p>
-      ),
-      cell: ({ row }) => (
-        <div
-          className="capitalize"
-          style={{
-            width: 100,
-            overflow: "hidden",
-            whiteSpace: "nowrap",
-            textOverflow: "ellipsis",
-          }}
-          title={row.getValue("MODULE_NAME") || "-"}
-        >
-          {row.getValue("MODULE_NAME") || "-"}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "INCLUDE_CUSTOM_COLUMNS",
-      header: () => (
-        <p className="truncate" style={{ width: 120 }}>
-          Custom Columns
-        </p>
-      ),
-      cell: ({ row }) => (
-        <div
-          className="capitalize"
-          style={{
-            width: 120,
-            overflow: "hidden",
-            whiteSpace: "nowrap",
-            textOverflow: "ellipsis",
-          }}
-          title={row.getValue("INCLUDE_CUSTOM_COLUMNS") || "-"}
-        >
-          {row.getValue("INCLUDE_CUSTOM_COLUMNS") || "-"}
         </div>
       ),
     },
@@ -335,7 +292,7 @@ const CategoryListPage = () => {
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogContent className="sm:max-w-[425px]">
-                <CategoryAccessRightsModal
+                <CategoryCreationModal
                   mode={mode}
                   selectedItem={selectedItem}
                   onSuccess={() => {
@@ -444,4 +401,4 @@ const CategoryListPage = () => {
   );
 };
 
-export default CategoryListPage;
+export default CategoryMasterPage;

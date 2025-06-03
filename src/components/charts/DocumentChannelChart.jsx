@@ -10,7 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { useAuth } from "../../contexts/AuthContext";
-import { getDashboardChannelSummary } from "../../services/dashboardService";
+import { callSoapService } from "@/services/callSoapService";
 
 const DocumentChannelChart = ({ daysCount = 30 }) => {
   const [channelData, setChannelData] = useState([]);
@@ -21,17 +21,19 @@ const DocumentChannelChart = ({ daysCount = 30 }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-         const payloadForTheUser = userData.isAdmin ? "" : `${userData.userName}`;
+        const payloadForTheUser = userData.isAdmin
+          ? ""
+          : `${userData.userName}`;
 
         const payload = {
           NoOfDays: daysCount,
           ForTheUser: payloadForTheUser,
         };
 
-        const data = await getDashboardChannelSummary(
-          payload,
-          userData.userEmail,
-          userData.clientURL
+        const data = await callSoapService(
+          userData.clientURL,
+          "DMS_GetDashboard_ChannelSummary",
+          payload
         );
 
         const formattedData = data.map((item) => ({
@@ -59,14 +61,14 @@ const DocumentChannelChart = ({ daysCount = 30 }) => {
           <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" />
           <XAxis dataKey="Name" stroke="#9CA3AF" fontSize={14} />
           <YAxis stroke="#9CA3AF" fontSize={14} />
-        <Tooltip
-          contentStyle={{
-                backgroundColor: "rgba(12, 14, 16, 0.8)",
-                borderColor: "#4B5563",
-                borderRadius: "8px",
-                padding: "6px",
-                fontSize: "12px",
-              }}
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "rgba(12, 14, 16, 0.8)",
+              borderColor: "#4B5563",
+              borderRadius: "8px",
+              padding: "6px",
+              fontSize: "12px",
+            }}
             itemStyle={{ fontSize: 12, color: "#E5E7EB" }}
           />
           <Bar dataKey={"Counts"} fill="#8884d8">

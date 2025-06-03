@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Cell,
   Legend,
@@ -8,7 +8,7 @@ import {
   Tooltip,
 } from "recharts";
 import { useAuth } from "../../contexts/AuthContext";
-import { getDashboardChannelSummary } from "../../services/dashboardService";
+import { callSoapService } from "@/services/callSoapService";
 
 const COLORS = [
   "#8884d8",
@@ -26,17 +26,19 @@ const ChannelPerformanceChart = ({ daysCount = 30 }) => {
   useEffect(() => {
     const fetchChannelSummary = async () => {
       try {
-        const payloadForTheUser = userData.isAdmin ? "" : `${userData.userName}`;
+        const payloadForTheUser = userData.isAdmin
+          ? ""
+          : `${userData.userName}`;
 
         const payload = {
           NoOfDays: daysCount,
           ForTheUser: payloadForTheUser,
         };
 
-        const data = await getDashboardChannelSummary(
-          payload,
-          userData.userEmail,
-          userData.clientURL
+        const data = await callSoapService(
+          userData.clientURL,
+          "DMS_GetDashboard_ChannelSummary",
+          payload
         );
 
         // Map the service data to the format expected by Recharts
@@ -81,14 +83,14 @@ const ChannelPerformanceChart = ({ daysCount = 30 }) => {
               />
             ))}
           </Pie>
-         <Tooltip
-          contentStyle={{
-                backgroundColor: "rgba(12, 14, 16, 0.8)",
-                borderColor: "#4B5563",
-                borderRadius: "8px",
-                padding: "6px",
-                fontSize: "12px",
-              }}
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "rgba(12, 14, 16, 0.8)",
+              borderColor: "#4B5563",
+              borderRadius: "8px",
+              padding: "6px",
+              fontSize: "12px",
+            }}
             itemStyle={{ fontSize: 12, color: "#E5E7EB" }}
           />
           <Legend

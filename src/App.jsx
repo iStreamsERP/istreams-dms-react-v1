@@ -1,8 +1,8 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
-import CategoryAccessPage from "./pages/CategoryAccessPage";
-import CategoryListPage from "./pages/CategoryListPage";
+import CategoryAccessRightsPage from "./pages/CategoryAccessRightsPage";
+import CategoryMasterPage from "./pages/CategoryMasterPage";
 import CategoryViewPage from "./pages/CategoryViewPage";
 import DashboardPage from "./pages/DashboardPage";
 import DocumentListPage from "./pages/DocumentListPage";
@@ -12,12 +12,11 @@ import LoginFormPage from "./pages/LoginFormPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import RoleAccessRightsPage from "./pages/RoleAccessRightsPage";
 import SignUpPage from "./pages/SignUpPage";
-import TaskPage from "./pages/TaskPage";
-import TaskView from "./pages/TaskView";
+import TaskViewPage from "./pages/TaskViewPage";
 import TeamsPage from "./pages/TeamsPage";
-import UserAccessRights from "./pages/UserAccessRights";
+import UserAccessRightsPage from "./pages/UserAccessRightsPage";
 import UserListPage from "./pages/UserListPage";
-import UserRole from "./pages/UserRole";
+import UserRolePage from "./pages/UserRolePage";
 import Layout from "./routes/Layout";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -53,14 +52,16 @@ const App = () => {
             { path: "/document-list", element: <DocumentListPage /> },
             { path: "/document-view", element: <DocumentViewPage /> },
 
-            { path: "task-view", element: <TaskView /> },
-            { path: "task", element: <TaskPage /> },
+            { path: "task-view", element: <TaskViewPage /> },
             { path: "users", element: <UserListPage /> },
-            { path: "user-role", element: <UserRole /> },
-            { path: "category-access", element: <CategoryAccessPage /> },
-            { path: "user-access-rights", element: <UserAccessRights /> },
+            { path: "user-role", element: <UserRolePage /> },
+            {
+              path: "category-access-rights",
+              element: <CategoryAccessRightsPage />,
+            },
+            { path: "user-access-rights", element: <UserAccessRightsPage /> },
             { path: "role-access-rights", element: <RoleAccessRightsPage /> },
-            { path: "category-list", element: <CategoryListPage /> },
+            { path: "category-master", element: <CategoryMasterPage /> },
           ],
         },
       ],

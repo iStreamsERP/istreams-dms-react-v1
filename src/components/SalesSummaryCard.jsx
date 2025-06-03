@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { callSoapService } from "@/services/callSoapService";
-import { getDashboardOverallSummary } from "@/services/dashboardService";
 import {
   CheckCircle,
   ClipboardCheck,

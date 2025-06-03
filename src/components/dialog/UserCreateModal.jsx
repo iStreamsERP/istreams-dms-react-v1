@@ -13,7 +13,6 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { callSoapService } from "@/services/callSoapService";
-import { createNewUser } from "@/services/userManagementService";
 import { getDomainFromEmail } from "@/utils/emailHelpers";
 import axios from "axios";
 import { Check, UserPlus } from "lucide-react";
@@ -24,24 +23,24 @@ import { BeatLoader } from "react-spinners";
 const validateForm = (data) => {
   const errors = {};
 
-  if (!data.newUserName || data.newUserName.trim().length < 2) {
-    errors.newUserName = "Username must be at least 2 characters.";
+  if (!data.NEW_USER_NAME || data.NEW_USER_NAME.trim().length < 2) {
+    errors.NEW_USER_NAME = "Username must be at least 2 characters.";
   }
-  if (!data.password || data.password.trim().length < 6) {
-    errors.password = "Password must be at least 6 characters.";
+  if (!data.PASSWORD || data.PASSWORD.trim().length < 6) {
+    errors.PASSWORD = "Password must be at least 6 characters.";
   }
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!data.emailAddress || !emailRegex.test(data.emailAddress)) {
-    errors.emailAddress = "Please enter a valid email address.";
+  if (!data.EMAIL_ADDRESS || !emailRegex.test(data.EMAIL_ADDRESS)) {
+    errors.EMAIL_ADDRESS = "Please enter a valid email address.";
   }
-  if (!data.mobileNumber || data.mobileNumber.trim().length < 10) {
-    errors.mobileNumber = "Mobile number must be at least 10 digits.";
+  if (!data.MOBILE_NUMBER || data.MOBILE_NUMBER.trim().length < 10) {
+    errors.MOBILE_NUMBER = "Mobile number must be at least 10 digits.";
   }
-  if (!data.fullName || data.fullName.trim().length < 2) {
-    errors.fullName = "Full name is required.";
+  if (!data.FULL_NAME || data.FULL_NAME.trim().length < 2) {
+    errors.FULL_NAME = "Full name is required.";
   }
-  if (!data.empNo || data.empNo.trim().length < 2) {
-    errors.empNo = "Employee number is required.";
+  if (!data.EMP_NO || data.EMP_NO.trim().length < 2) {
+    errors.EMP_NO = "Employee number is required.";
   }
 
   return errors;
@@ -50,17 +49,17 @@ const validateForm = (data) => {
 // Validate a single field on blur.
 const validateInput = (name, value) => {
   switch (name) {
-    case "newUserName":
+    case "NEW_USER_NAME":
       if (!value || value.trim().length < 2) {
         return "Username must be at least 2 characters.";
       }
       break;
-    case "password":
+    case "PASSWORD":
       if (!value || value.trim().length < 6) {
         return "Password must be at least 6 characters.";
       }
       break;
-    case "emailAddress":
+    case "EMAIL_ADDRESS":
       {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!value || !emailRegex.test(value)) {
@@ -68,17 +67,17 @@ const validateInput = (name, value) => {
         }
       }
       break;
-    case "mobileNumber":
+    case "MOBILE_NUMBER":
       if (!value || !/^\d{10}$/.test(value)) {
         return "Mobile number must be exactly 10 digits.";
       }
       break;
-    case "fullName":
+    case "FULL_NAME":
       if (!value || value.trim().length < 2) {
         return "Full name must be at least 2 characters.";
       }
       break;
-    case "empNo":
+    case "EMP_NO":
       if (!value || value.trim().length < 2) {
         return "Employee number must be at least 2 characters.";
       }
@@ -98,15 +97,15 @@ const UserCreateModal = ({ user, open, onClose }) => {
   const [previewUrl, setPreviewUrl] = useState(null);
 
   const initialFormData = {
-    loginUserName: userData.currentUserName,
-    newUserName: "",
-    password: "",
+    LOGIN_USER_NAME: userData.currentUserName,
+    NEW_USER_NAME: "",
+    PASSWORD: "",
     isAdminUser: false,
-    emailAddress: "",
-    mobileNumber: "",
-    fullName: "",
-    empNo: "",
-    domainName: DOMAIN_NAME,
+    EMAIL_ADDRESS: "",
+    MOBILE_NUMBER: "",
+    FULL_NAME: "",
+    EMP_NO: "",
+    DOMAIN_NAME: DOMAIN_NAME,
     employeeImage: "",
     accountExpired: false,
     accountLocked: false,
@@ -115,13 +114,13 @@ const UserCreateModal = ({ user, open, onClose }) => {
   const [formData, setFormData] = useState(initialFormData);
 
   const [isFocused, setIsFocused] = useState({
-    newUserName: false,
-    password: false,
+    NEW_USER_NAME: false,
+    PASSWORD: false,
     isAdminUser: false,
-    emailAddress: false,
-    mobileNumber: false,
-    fullName: false,
-    empNo: false,
+    EMAIL_ADDRESS: false,
+    MOBILE_NUMBER: false,
+    FULL_NAME: false,
+    EMP_NO: false,
     employeeImage: false,
     accountExpired: false,
     accountLocked: false,
@@ -131,15 +130,15 @@ const UserCreateModal = ({ user, open, onClose }) => {
     if (user) {
       const DOMAIN_NAME = getDomainFromEmail(user?.EMAIL_ADDRESS);
       setFormData({
-        loginUserName: userData.currentUserName,
-        newUserName: user?.USER_NAME || "",
-        password: "",
+        LOGIN_USER_NAME: userData.currentUserName,
+        NEW_USER_NAME: user?.USER_NAME || "",
+        PASSWORD: "",
         isAdminUser: user?.USER_TYPE || false,
-        emailAddress: user?.EMAIL_ADDRESS || "",
-        mobileNumber: user?.MOBILE_NO || "",
-        fullName: user?.FULL_NAME || "",
-        empNo: user?.EMP_NO || "",
-        domainName: DOMAIN_NAME,
+        DOMAIN_NAME: DOMAIN_NAME,
+        EMAIL_ADDRESS: user?.EMAIL_ADDRESS || "",
+        MOBILE_NUMBER: user?.MOBILE_NO || "",
+        FULL_NAME: user?.FULL_NAME || "",
+        EMP_NO: user?.EMP_NO || "",
         employeeImage: user?.employeeImage || "",
         accountExpired: user?.ACCOUNT_EXPIRED || false,
         accountLocked: user?.ACCOUNT_LOCKED || false,
@@ -201,7 +200,7 @@ const UserCreateModal = ({ user, open, onClose }) => {
           }));
 
           if (user) {
-            await handleUpdatedImage(formData.empNo);
+            await handleUpdatedImage(formData.EMP_NO);
           }
         } else {
           setPreviewUrl(null);
@@ -210,7 +209,7 @@ const UserCreateModal = ({ user, open, onClose }) => {
         setFormData((prevData) => ({
           ...prevData,
           [name]:
-            name === "newUserName"
+            name === "NEW_USER_NAME"
               ? value.toUpperCase()
               : type === "checkbox"
               ? checked
@@ -273,14 +272,14 @@ const UserCreateModal = ({ user, open, onClose }) => {
     }
   };
 
-  const handleUploadImage = async (empNo) => {
+  const handleUploadImage = async (EMP_NO) => {
     setLoading(true);
 
     const file = formData.employeeImage;
     const form = new FormData();
     form.append("file", file);
     form.append("email", userData.currentUserLogin);
-    form.append("fileName", `EMPLOYEE_IMAGE_${empNo}`);
+    form.append("fileName", `EMPLOYEE_IMAGE_${EMP_NO}`);
 
     try {
       const uploadUrl =
@@ -313,7 +312,7 @@ const UserCreateModal = ({ user, open, onClose }) => {
     }
   };
 
-  const handleUpdatedImage = async (empNo) => {
+  const handleUpdatedImage = async (EMP_NO) => {
     setLoading(true);
 
     const file = formData.employeeImage;
@@ -322,15 +321,15 @@ const UserCreateModal = ({ user, open, onClose }) => {
       const payload = new FormData();
       payload.append("file", file);
       payload.append("email", userData.currentUserLogin);
-      payload.append("fileName", `EMPLOYEE_IMAGE_${empNo}`);
+      payload.append("fileName", `EMPLOYEE_IMAGE_${EMP_NO}`);
       console.log(
-        `https://cloud.istreams-erp.com:4498/api/empImage/update?email=${userData.currentUserLogin}&fileName=EMPLOYEE_IMAGE_${empNo}`
+        `https://cloud.istreams-erp.com:4498/api/empImage/update?email=${userData.currentUserLogin}&fileName=EMPLOYEE_IMAGE_${EMP_NO}`
       );
 
       debugger;
 
       const response = await axios.put(
-        `https://cloud.istreams-erp.com:4498/api/empImage/update?email=${userData.currentUserLogin}&fileName=EMPLOYEE_IMAGE_${empNo}`,
+        `https://cloud.istreams-erp.com:4498/api/empImage/update?email=${userData.currentUserLogin}&fileName=EMPLOYEE_IMAGE_${EMP_NO}`,
         payload,
         {
           headers: {
@@ -377,14 +376,12 @@ const UserCreateModal = ({ user, open, onClose }) => {
 
     setLoading(true);
     try {
-      const response = await createNewUser(
-        formData,
-        userData.userEmail,
-        userData.clientURL
-      );
+
+            const response = await callSoapService(userData.clientURL, "UM_Create_New_User", formData);
+
 
       if (!user) {
-        await handleUploadImage(formData.empNo);
+        await handleUploadImage(formData.EMP_NO);
       }
 
       toast({
@@ -424,26 +421,26 @@ const UserCreateModal = ({ user, open, onClose }) => {
           {/* Left Side */}
           <div className="grid gap-2">
             <div className="grid grid-cols-1 gap-2">
-              <Label htmlFor="newUserName" className="text-left">
+              <Label htmlFor="NEW_USER_NAME" className="text-left">
                 User Name
               </Label>
               <div className="flex items-center gap-1">
                 <Input
-                  name="newUserName"
-                  id="newUserName"
+                  name="NEW_USER_NAME"
+                  id="NEW_USER_NAME"
                   type="text"
                   placeholder="Type username"
                   className="w-full"
-                  value={formData.newUserName}
+                  value={formData.NEW_USER_NAME}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   tabIndex={-1}
                 />
-                {loading["USER_NAME"] || (isFocused.newUserName && user) ? (
+                {loading["USER_NAME"] || (isFocused.NEW_USER_NAME && user) ? (
                   <Button
                     className="flex w-[10%] min-w-[40px] items-center justify-center p-2 bg-green-500"
                     onMouseDown={() =>
-                      handleUpdate("USER_NAME", formData.newUserName)
+                      handleUpdate("USER_NAME", formData.NEW_USER_NAME)
                     }
                   >
                     {loading["USER_NAME"] ? (
@@ -454,35 +451,35 @@ const UserCreateModal = ({ user, open, onClose }) => {
                   </Button>
                 ) : null}
               </div>
-              {errors.newUserName && (
+              {errors.NEW_USER_NAME && (
                 <span className="text-xs text-red-500">
-                  {errors.newUserName}
+                  {errors.NEW_USER_NAME}
                 </span>
               )}
             </div>
 
             <div className="grid grid-cols-1 gap-2">
-              <Label htmlFor="password" className="text-left">
+              <Label htmlFor="PASSWORD" className="text-left">
                 Password
               </Label>
               <div className="flex items-center gap-1">
                 <Input
-                  name="password"
-                  id="password"
+                  name="PASSWORD"
+                  id="PASSWORD"
                   type="password"
                   placeholder="Type password"
                   className="w-full"
-                  value={formData.password}
+                  value={formData.PASSWORD}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   tabIndex={-1}
                 />
-                {loading["password"] || (isFocused.password && user) ? (
+                {loading["PASSWORD"] || (isFocused.PASSWORD && user) ? (
                   <Button
                     className="flex w-[10%] min-w-[40px] items-center justify-center p-2 bg-green-500"
                     onMouseDown={handleUpdate}
                   >
-                    {loading["password"] ? (
+                    {loading["PASSWORD"] ? (
                       <BeatLoader color="#000" size={8} />
                     ) : (
                       <Check className="h-5 w-5" />
@@ -490,8 +487,8 @@ const UserCreateModal = ({ user, open, onClose }) => {
                   </Button>
                 ) : null}
               </div>
-              {errors.password && (
-                <span className="text-xs text-red-500">{errors.password}</span>
+              {errors.PASSWORD && (
+                <span className="text-xs text-red-500">{errors.PASSWORD}</span>
               )}
             </div>
 
@@ -536,27 +533,27 @@ const UserCreateModal = ({ user, open, onClose }) => {
             </div>
 
             <div className="grid grid-cols-1 gap-2">
-              <Label htmlFor="emailAddress" className="text-left">
+              <Label htmlFor="EMAIL_ADDRESS" className="text-left">
                 Email Address
               </Label>
               <div className="flex items-center gap-1">
                 <Input
-                  name="emailAddress"
-                  id="emailAddress"
+                  name="EMAIL_ADDRESS"
+                  id="EMAIL_ADDRESS"
                   type="email"
                   placeholder="Enter email address"
                   className="w-full"
-                  value={formData.emailAddress}
+                  value={formData.EMAIL_ADDRESS}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   tabIndex={-1}
                 />
                 {loading["EMAIL_ADDRESS"] ||
-                (isFocused.emailAddress && user) ? (
+                (isFocused.EMAIL_ADDRESS && user) ? (
                   <Button
                     className="flex w-[10%] min-w-[40px] items-center justify-center p-2 bg-green-500"
                     onMouseDown={() =>
-                      handleUpdate("EMAIL_ADDRESS", formData.emailAddress)
+                      handleUpdate("EMAIL_ADDRESS", formData.EMAIL_ADDRESS)
                     }
                   >
                     {loading["EMAIL_ADDRESS"] ? (
@@ -567,35 +564,35 @@ const UserCreateModal = ({ user, open, onClose }) => {
                   </Button>
                 ) : null}
               </div>
-              {errors.emailAddress && (
+              {errors.EMAIL_ADDRESS && (
                 <span className="text-xs text-red-500">
-                  {errors.emailAddress}
+                  {errors.EMAIL_ADDRESS}
                 </span>
               )}
             </div>
 
             <div className="flex w-full items- gap-1">
               <div className="flex-grow">
-                <Label htmlFor="mobileNumber" className="text-left">
+                <Label htmlFor="MOBILE_NUMBER" className="text-left">
                   Mobile Number
                 </Label>
                 <div className="flex items-center gap-1">
                   <Input
-                    name="mobileNumber"
-                    id="mobileNumber"
+                    name="MOBILE_NUMBER"
+                    id="MOBILE_NUMBER"
                     type="text"
                     placeholder="Enter mobile number"
                     className="w-full"
-                    value={formData.mobileNumber}
+                    value={formData.MOBILE_NUMBER}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     tabIndex={-1}
                   />
-                  {loading["MOBILE_NO"] || (isFocused.mobileNumber && user) ? (
+                  {loading["MOBILE_NO"] || (isFocused.MOBILE_NUMBER && user) ? (
                     <Button
                       className="flex w-[10%] min-w-[40px] items-center justify-center p-2 bg-green-500"
                       onMouseDown={() =>
-                        handleUpdate("MOBILE_NO", formData.mobileNumber)
+                        handleUpdate("MOBILE_NO", formData.MOBILE_NUMBER)
                       }
                     >
                       {loading["MOBILE_NO"] ? (
@@ -606,35 +603,35 @@ const UserCreateModal = ({ user, open, onClose }) => {
                     </Button>
                   ) : null}
                 </div>
-                {errors.mobileNumber && (
+                {errors.MOBILE_NUMBER && (
                   <span className="text-xs text-red-500">
-                    {errors.mobileNumber}
+                    {errors.MOBILE_NUMBER}
                   </span>
                 )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-2">
-              <Label htmlFor="fullName" className="text-left">
+              <Label htmlFor="FULL_NAME" className="text-left">
                 Full Name
               </Label>
               <div className="flex items-center gap-1">
                 <Input
-                  name="fullName"
-                  id="fullName"
+                  name="FULL_NAME"
+                  id="FULL_NAME"
                   type="text"
                   placeholder="Enter full name"
                   className="w-full"
-                  value={formData.fullName}
+                  value={formData.FULL_NAME}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   tabIndex={-1}
                 />
-                {loading["FULL_NAME"] || (isFocused.fullName && user) ? (
+                {loading["FULL_NAME"] || (isFocused.FULL_NAME && user) ? (
                   <Button
                     className="flex w-[10%] min-w-[40px] items-center justify-center p-2 bg-green-500"
                     onMouseDown={() =>
-                      handleUpdate("FULL_NAME", formData.fullName)
+                      handleUpdate("FULL_NAME", formData.FULL_NAME)
                     }
                   >
                     {loading["FULL_NAME"] ? (
@@ -645,31 +642,31 @@ const UserCreateModal = ({ user, open, onClose }) => {
                   </Button>
                 ) : null}
               </div>
-              {errors.fullName && (
-                <span className="text-xs text-red-500">{errors.fullName}</span>
+              {errors.FULL_NAME && (
+                <span className="text-xs text-red-500">{errors.FULL_NAME}</span>
               )}
             </div>
 
             <div className="grid grid-cols-1 gap-2">
-              <Label htmlFor="empNo" className="text-left">
+              <Label htmlFor="EMP_NO" className="text-left">
                 Employee Number
               </Label>
               <div className="flex items-center gap-1">
                 <Input
-                  name="empNo"
-                  id="empNo"
+                  name="EMP_NO"
+                  id="EMP_NO"
                   type="text"
                   placeholder="Enter employee number"
                   className="w-full"
-                  value={formData.empNo}
+                  value={formData.EMP_NO}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   tabIndex={-1}
                 />
-                {loading["EMP_NO"] || (isFocused.empNo && user) ? (
+                {loading["EMP_NO"] || (isFocused.EMP_NO && user) ? (
                   <Button
                     className="flex w-[10%] min-w-[40px] items-center justify-center p-2 bg-green-500"
-                    onMouseDown={() => handleUpdate("EMP_NO", formData.empNo)}
+                    onMouseDown={() => handleUpdate("EMP_NO", formData.EMP_NO)}
                   >
                     {loading["EMP_NO"] ? (
                       <BeatLoader color="#000" size={8} />
@@ -679,8 +676,8 @@ const UserCreateModal = ({ user, open, onClose }) => {
                   </Button>
                 ) : null}
               </div>
-              {errors.empNo && (
-                <span className="text-xs text-red-500">{errors.empNo}</span>
+              {errors.EMP_NO && (
+                <span className="text-xs text-red-500">{errors.EMP_NO}</span>
               )}
             </div>
           </div>
@@ -698,7 +695,7 @@ const UserCreateModal = ({ user, open, onClose }) => {
                 {formData.employeeImage ? (
                   <img
                     src={previewUrl}
-                    alt={formData.fullName}
+                    alt={formData.FULL_NAME}
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -721,24 +718,24 @@ const UserCreateModal = ({ user, open, onClose }) => {
             </div>
 
             <div>
-              <Label htmlFor="domainName" className="text-left">
+              <Label htmlFor="DOMAIN_NAME" className="text-left">
                 Domain Name
               </Label>
               <Input
-                name="domainName"
-                id="domainName"
+                name="DOMAIN_NAME"
+                id="DOMAIN_NAME"
                 type="text"
                 placeholder="Enter domain name"
                 className="w-full"
-                value={formData.domainName}
+                value={formData.DOMAIN_NAME}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 readOnly={true}
                 tabIndex={-1}
               />
-              {errors.domainName && (
+              {errors.DOMAIN_NAME && (
                 <span className="text-xs text-red-500">
-                  {errors.domainName}
+                  {errors.DOMAIN_NAME}
                 </span>
               )}
             </div>

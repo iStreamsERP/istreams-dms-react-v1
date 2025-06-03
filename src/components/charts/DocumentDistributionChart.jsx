@@ -1,3 +1,4 @@
+import { callSoapService } from "@/services/callSoapService";
 import { useEffect, useState } from "react";
 import {
   Cell,
@@ -8,7 +9,6 @@ import {
   Tooltip,
 } from "recharts";
 import { useAuth } from "../../contexts/AuthContext";
-import { getDashboardOverallSummary } from "../../services/dashboardService";
 
 const DocumentDistributionChart = ({ daysCount = 30 }) => {
   const [overallSummaryData, setOverallSummaryData] = useState([]);
@@ -19,17 +19,19 @@ const DocumentDistributionChart = ({ daysCount = 30 }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const payloadForTheUser = userData.isAdmin ? "" : `${userData.userName}`;
+        const payloadForTheUser = userData.isAdmin
+          ? ""
+          : `${userData.userName}`;
 
         const payload = {
           NoOfDays: daysCount,
           ForTheUser: payloadForTheUser,
         };
 
-        const data = await getDashboardOverallSummary(
-          payload,
-          userData.userEmail,
-          userData.clientURL
+        const data = await callSoapService(
+          userData.clientURL,
+          "DMS_GetDashboard_OverallSummary",
+          payload
         );
         // Convert each object to the expected format for the chart
         const formattedData = data.map((item) => ({

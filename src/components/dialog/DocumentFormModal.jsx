@@ -2,11 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import {
-  getDataModelFromQueryService,
-  getDataModelService,
-  saveDataService,
-} from "@/services/dataModelService";
+import { callSoapService } from "@/services/callSoapService";
 import { convertDataModelToStringData } from "@/utils/dataModelConverter";
 import { getFileIcon } from "@/utils/getFileIcon";
 import {
@@ -19,7 +15,6 @@ import {
   Hash,
   Link,
   Loader,
-  Loader2,
   LocateFixed,
   MessageSquare,
   UserRound,
@@ -27,13 +22,11 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { updateDmsVerifiedBy } from "../../services/dmsService";
 import { convertServiceDate } from "../../utils/dateUtils";
 import DocumentPreview from "../DocumentPreview";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import RejectModal from "./RejectModal";
-import { callSoapService } from "@/services/callSoapService";
 
 const DocumentFormModal = ({
   formModalRef,
@@ -55,28 +48,27 @@ const DocumentFormModal = ({
     DOC_RELATED_TO: "",
     DOC_RELATED_CATEGORY: "",
     DOC_REF_VALUE: "",
-    USER_NAME: userData.userName,
+    X_VENDOR_ID: "",
+    X_VENDOR_NAME: "",
+    X_CLIENT_ID: "",
+    X_CLIENT_NAME: "",
     COMMENTS: "",
-    DOC_TAGS: "",
-    FOR_THE_USERS: "",
     EXPIRY_DATE: new Date().toISOString().split("T")[0],
     REF_TASK_ID: 0,
+    FOR_THE_USERS: "",
+    USER_NAME: userData.userName,
   };
 
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categoryList, setCategoryList] = useState([]);
-  // const [dmsMasterData, setDmsMasterData] = useState([]);
 
   const [existingDocs, setExistingDocs] = useState([]);
   const [isLoadingDocs, setIsLoadingDocs] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
 
   const [showRejectModal, setShowRejectModal] = useState(false);
-
-  const [dynamicFields, setDynamicFields] = useState([]);
-  const [isLoadingDynamicFields, setIsLoadingDynamicFields] = useState(false);
 
   const [vendorData, setVendorData] = useState({
     list: [],
@@ -115,7 +107,8 @@ const DocumentFormModal = ({
 
   useEffect(() => {
     fetchCategoryList();
-    // fetchDmsMasterDataModel();
+    fetchVendorData();
+    fetchClientData();
   }, []);
 
   // Fetch category list on component mount
@@ -141,25 +134,7 @@ const DocumentFormModal = ({
     }
   };
 
-  // const fetchDmsMasterDataModel = async () => {
-  //   try {
-  //     const response = await getDataModelService(
-  //       {
-  //         DataModelName: "SYNM_DMS_MASTER",
-  //         WhereCondition: "",
-  //         Orderby: "",
-  //       },
-  //       userData.userEmail,
-  //       userData.clientURL
-  //     );
-  //     setDmsMasterData(response);
-  //   } catch (err) {
-  //     console.error("Error fetching data model:", err);
-  //   }
-  // };
-
   // Fetch existing documents and categories
-
   useEffect(() => {
     fetchExistingDocument();
   }, [selectedDocument?.REF_SEQ_NO, userData.userEmail]);
@@ -192,69 +167,16 @@ const DocumentFormModal = ({
     }
   };
 
-  useEffect(() => {
-    loadInitialDynamicFields();
-  }, [selectedDocument?.DOC_RELATED_CATEGORY]);
-
-  const loadInitialDynamicFields = async () => {
-    if (selectedDocument?.DOC_RELATED_CATEGORY) {
-      try {
-        setIsLoadingDynamicFields(true);
-        const payload = {
-          SQLQuery: `SELECT INCLUDE_CUSTOM_COLUMNS FROM SYNM_DMS_DOC_CATEGORIES WHERE CATEGORY_NAME = '${selectedDocument.DOC_RELATED_CATEGORY}'`,
-        };
-
-        const response = await callSoapService(
-          userData.clientURL,
-          "DataModel_GetDataFrom_Query",
-          payload
-        );
-
-        const commaText = response[0]?.INCLUDE_CUSTOM_COLUMNS || "";
-        const fields = commaText
-          .split(",")
-          .map((col) => col.trim())
-          .filter((col) => col !== "")
-          .map((col) => ({
-            COLUMN_NAME: col,
-            COLUMN_LABEL: col
-              .replace(/_/g, " ")
-              .replace(/\b\w/g, (c) => c.toUpperCase()),
-            INPUT_TYPE: "text",
-            REQUIRED: true,
-          }));
-
-        setDynamicFields(fields);
-
-        setFormData((prev) => ({
-          ...prev,
-          ...dynamicFields.reduce(
-            (acc, field) => ({
-              ...acc,
-              [field.COLUMN_NAME]: selectedDocument[field.COLUMN_NAME] || "",
-            }),
-            {}
-          ),
-        }));
-      } catch (error) {
-        console.error("Error loading initial dynamic fields:", error);
-        setDynamicFields([]);
-      } finally {
-        setIsLoadingDynamicFields(false);
-      }
-    }
-  };
-
   const fetchVendorData = useCallback(async () => {
     try {
       const payload = {
         SQLQuery: `SELECT VENDOR_ID, VENDOR_NAME FROM VENDOR_MASTER`,
       };
 
-      const response = await getDataModelFromQueryService(
-        payload,
-        userData.userEmail,
-        userData.clientURL
+      const response = await callSoapService(
+        userData.clientURL,
+        "DataModel_GetDataFrom_Query",
+        payload
       );
 
       setVendorData({
@@ -276,10 +198,10 @@ const DocumentFormModal = ({
         SQLQuery: `SELECT CLIENT_ID, CLIENT_NAME FROM CLIENT_MASTER`,
       };
 
-      const response = await getDataModelFromQueryService(
-        payload,
-        userData.userEmail,
-        userData.clientURL
+      const response = await callSoapService(
+        userData.clientURL,
+        "DataModel_GetDataFrom_Query",
+        payload
       );
 
       setClientData({
@@ -295,73 +217,6 @@ const DocumentFormModal = ({
     }
   }, [userData.userEmail, userData.clientURL, toast]);
 
-  useEffect(() => {
-    const hasVendorField = dynamicFields.some(
-      (f) =>
-        f.COLUMN_NAME === "X_VENDOR_ID" || f.COLUMN_NAME === "X_VENDOR_NAME"
-    );
-    const hasClientField = dynamicFields.some(
-      (f) =>
-        f.COLUMN_NAME === "X_CLIENT_ID" || f.COLUMN_NAME === "X_CLIENT_NAME"
-    );
-
-    if (hasVendorField) fetchVendorData();
-    if (hasClientField) fetchClientData();
-  }, [dynamicFields, fetchVendorData, fetchClientData]);
-
-  const handleCategoryChange = async (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: "" }));
-
-    try {
-      const payload = {
-        SQLQuery: `SELECT INCLUDE_CUSTOM_COLUMNS FROM SYNM_DMS_DOC_CATEGORIES WHERE CATEGORY_NAME = '${value}'`,
-      };
-      const response = await getDataModelFromQueryService(
-        payload,
-        userData.userEmail,
-        userData.clientURL
-      );
-
-      const raw = Array.isArray(response) ? response : response?.Data || [];
-      const commaText = raw[0]?.INCLUDE_CUSTOM_COLUMNS || "";
-
-      const fields = commaText
-        .split(",")
-        .map((col) => col.trim())
-        .filter((col) => col !== "")
-        .map((col) => {
-          const cleanCol = col.replace(/^X_/, ""); // Remove 'X_' prefix
-          const label = cleanCol
-            .toLowerCase() // Convert everything to lowercase
-            .replace(/_/g, " ") // Replace underscores with spaces
-            .replace(/\b\w/g, (c) => c.toUpperCase()); // Capitalize first letter of each word
-
-          return {
-            COLUMN_NAME: col,
-            COLUMN_LABEL: label,
-            INPUT_TYPE: "text",
-            REQUIRED: true,
-          };
-        });
-
-      setDynamicFields(fields);
-
-      setFormData((prev) => ({
-        ...prev,
-        // Preserve existing dynamic field values that are being replaced
-        ...fields.reduce((acc, field) => {
-          acc[field.COLUMN_NAME] = prev[field.COLUMN_NAME] || "";
-          return acc;
-        }, {}),
-      }));
-    } catch (error) {
-      console.error("Error fetching category-specific fields:", error);
-      setDynamicFields([]);
-    }
-  };
-
   // Validate required fields
   const validateForm = () => {
     const newErrors = {};
@@ -374,11 +229,6 @@ const DocumentFormModal = ({
     if (!formData.DOC_RELATED_CATEGORY.trim())
       newErrors.DOC_RELATED_CATEGORY = "Related Category is required";
 
-    dynamicFields.forEach((field) => {
-      if (field.REQUIRED && !formData[field.COLUMN_NAME]?.trim()) {
-        newErrors[field.COLUMN_NAME] = `${field.COLUMN_LABEL} is required`;
-      }
-    });
     return newErrors;
   };
 
@@ -777,7 +627,7 @@ const DocumentFormModal = ({
                       <select
                         name="DOC_RELATED_CATEGORY"
                         value={formData.DOC_RELATED_CATEGORY}
-                        onChange={handleCategoryChange}
+                        onChange={handleChange}
                         disabled={isReadOnly}
                         className="w-full rounded-md border border-gray-300 p-2 text-sm
             focus:ring-2 focus:ring-blue-500 focus:border-blue-500
@@ -815,174 +665,6 @@ const DocumentFormModal = ({
                       )}
                     </div>
 
-                    {isLoadingDynamicFields ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      dynamicFields.map((field) => {
-                        if (field.COLUMN_NAME === "X_VENDOR_ID") {
-                          return (
-                            <div key={field.COLUMN_NAME} className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm">
-                                <FileText className="h-4 w-4 text-gray-600" />
-                                <Label htmlFor={field.COLUMN_NAME}>
-                                  {field.COLUMN_LABEL}
-                                  {field.REQUIRED && (
-                                    <span className="text-red-500 ml-1">*</span>
-                                  )}
-                                </Label>
-                              </div>
-                              <select
-                                name={field.COLUMN_NAME}
-                                id={field.COLUMN_NAME}
-                                value={formData[field.COLUMN_NAME] || ""}
-                                onChange={handleChange}
-                                disabled={isReadOnly}
-                                className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                              >
-                                <option value="">
-                                  Select {field.COLUMN_LABEL}
-                                </option>
-                                {vendorData.list.map((vendor) => (
-                                  <option
-                                    key={vendor.VENDOR_ID}
-                                    value={vendor.VENDOR_ID}
-                                  >
-                                    {vendor.VENDOR_ID}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          );
-                        } else if (field.COLUMN_NAME === "X_VENDOR_NAME") {
-                          return (
-                            <div key={field.COLUMN_NAME} className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm">
-                                <FileText className="h-4 w-4 text-gray-600" />
-                                <Label htmlFor={field.COLUMN_NAME}>
-                                  {field.COLUMN_LABEL}
-                                  {field.REQUIRED && (
-                                    <span className="text-red-500 ml-1">*</span>
-                                  )}
-                                </Label>
-                              </div>
-                              <select
-                                name={field.COLUMN_NAME}
-                                id={field.COLUMN_NAME}
-                                value={formData[field.COLUMN_NAME] || ""}
-                                onChange={handleChange}
-                                disabled={isReadOnly}
-                                className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                              >
-                                <option value="">
-                                  Select {field.COLUMN_LABEL}
-                                </option>
-                                {vendorData.list.map((vendor) => (
-                                  <option
-                                    key={vendor.VENDOR_ID}
-                                    value={vendor.VENDOR_NAME}
-                                  >
-                                    {vendor.VENDOR_NAME}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          );
-                        } else if (field.COLUMN_NAME === "X_CLIENT_ID") {
-                          return (
-                            <div key={field.COLUMN_NAME} className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm">
-                                <FileText className="h-4 w-4 text-gray-600" />
-                                <Label htmlFor={field.COLUMN_NAME}>
-                                  {field.COLUMN_LABEL}
-                                  {field.REQUIRED && (
-                                    <span className="text-red-500 ml-1">*</span>
-                                  )}
-                                </Label>
-                              </div>
-                              <select
-                                name={field.COLUMN_NAME}
-                                id={field.COLUMN_NAME}
-                                value={formData[field.COLUMN_NAME] || ""}
-                                onChange={handleChange}
-                                disabled={isReadOnly}
-                                className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                              >
-                                <option value="">
-                                  Select {field.COLUMN_LABEL}
-                                </option>
-                                {clientData.list.map((client) => (
-                                  <option
-                                    key={client.CLIENT_ID}
-                                    value={client.CLIENT_ID}
-                                  >
-                                    {client.CLIENT_ID}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          );
-                        } else if (field.COLUMN_NAME === "X_CLIENT_NAME") {
-                          return (
-                            <div key={field.COLUMN_NAME} className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm">
-                                <FileText className="h-4 w-4 text-gray-600" />
-                                <Label htmlFor={field.COLUMN_NAME}>
-                                  {field.COLUMN_LABEL}
-                                  {field.REQUIRED && (
-                                    <span className="text-red-500 ml-1">*</span>
-                                  )}
-                                </Label>
-                              </div>
-                              <select
-                                name={field.COLUMN_NAME}
-                                id={field.COLUMN_NAME}
-                                value={formData[field.COLUMN_NAME] || ""}
-                                onChange={handleChange}
-                                disabled={isReadOnly}
-                                className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                              >
-                                <option value="">
-                                  Select {field.COLUMN_LABEL}
-                                </option>
-                                {clientData.list.map((client, index) => (
-                                  <option
-                                    key={`${client.CLIENT_ID}-${index}`}
-                                    value={client.CLIENT_NAME}
-                                  >
-                                    {client.CLIENT_NAME}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          );
-                        } else {
-                          return (
-                            <div key={field.COLUMN_NAME} className="space-y-2">
-                              <div className="flex items-center gap-2 text-sm">
-                                <FileText className="h-4 w-4 text-gray-600" />
-                                <Label htmlFor={field.COLUMN_NAME}>
-                                  {field.COLUMN_LABEL}
-                                  {field.REQUIRED && (
-                                    <span className="text-red-500 ml-1">*</span>
-                                  )}
-                                </Label>
-                              </div>
-                              <Input
-                                type={field.INPUT_TYPE}
-                                name={field.COLUMN_NAME}
-                                id={field.COLUMN_NAME}
-                                placeholder={`Enter ${field.COLUMN_LABEL}`}
-                                value={formData[field.COLUMN_NAME] || ""}
-                                onChange={handleChange}
-                                readOnly={isReadOnly}
-                                required={field.REQUIRED}
-                              />
-                            </div>
-                          );
-                        }
-                      })
-                    )}
-
                     {/* Expiry Date */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm">
@@ -1005,18 +687,122 @@ const DocumentFormModal = ({
                       <div className="flex items-center gap-2 text-sm">
                         <LocateFixed className="h-4 w-4 text-gray-600" />
                         <Label htmlFor="DOC_REF_VALUE">
-                          Document Reference Value
+                          Document Reference Value / Tag
                         </Label>
                       </div>
                       <Input
                         type="text"
                         name="DOC_REF_VALUE"
                         id="DOC_REF_VALUE"
-                        placeholder="Enter docs ref no"
+                        placeholder="Enter docs ref no / tag"
                         value={formData.DOC_REF_VALUE}
                         onChange={handleChange}
                         readOnly={isReadOnly}
                       />
+                    </div>
+
+                    {/* Client ID */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <FileText className="h-4 w-4 text-gray-600" />
+                        <Label htmlFor="X_CLIENT_ID">Client ID</Label>
+                      </div>
+                      <select
+                        name="X_CLIENT_ID"
+                        id="X_CLIENT_ID"
+                        value={formData.X_CLIENT_ID}
+                        onChange={handleChange}
+                        disabled={isReadOnly}
+                        className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                      >
+                        <option value="">Select client id</option>
+                        {clientData.list.map((client) => (
+                          <option
+                            key={client.CLIENT_ID}
+                            value={client.CLIENT_ID}
+                          >
+                            {client.CLIENT_ID}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Client Name */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <FileText className="h-4 w-4 text-gray-600" />
+                        <Label htmlFor="X_CLIENT_NAME">Client Name</Label>
+                      </div>
+                      <select
+                        name="X_CLIENT_NAME"
+                        id="X_CLIENT_NAME"
+                        value={formData.X_CLIENT_NAME}
+                        onChange={handleChange}
+                        disabled={isReadOnly}
+                        className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                      >
+                        <option value="">Select client name</option>
+                        {clientData.list.map((client, index) => (
+                          <option
+                            key={`${client.CLIENT_ID}-${index}`}
+                            value={client.CLIENT_NAME}
+                          >
+                            {client.CLIENT_NAME}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Vendor ID */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <FileText className="h-4 w-4 text-gray-600" />
+                        <Label htmlFor="X_VENDOR_ID">Vendor ID</Label>
+                      </div>
+                      <select
+                        name="X_VENDOR_ID"
+                        id="X_VENDOR_ID"
+                        value={formData.X_VENDOR_ID}
+                        onChange={handleChange}
+                        disabled={isReadOnly}
+                        className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                      >
+                        <option value="">Select vendor id</option>
+                        {vendorData.list.map((vendor) => (
+                          <option
+                            key={vendor.VENDOR_ID}
+                            value={vendor.VENDOR_ID}
+                          >
+                            {vendor.VENDOR_ID}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Vendor Name*/}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <FileText className="h-4 w-4 text-gray-600" />
+                        <Label htmlFor="X_VENDOR_NAME">Vendor Name</Label>
+                      </div>
+                      <select
+                        name="X_VENDOR_NAME"
+                        id="X_VENDOR_NAME"
+                        value={formData.X_VENDOR_NAME}
+                        onChange={handleChange}
+                        disabled={isReadOnly}
+                        className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                      >
+                        <option value="">Select vendor name</option>
+                        {vendorData.list.map((vendor) => (
+                          <option
+                            key={vendor.VENDOR_ID}
+                            value={vendor.VENDOR_NAME}
+                          >
+                            {vendor.VENDOR_NAME}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     {/* Remarks */}

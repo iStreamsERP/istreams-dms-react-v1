@@ -1,18 +1,14 @@
-import { Eye, Trash2, View, X, XIcon } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { callSoapService } from "@/services/callSoapService";
+import axios from "axios";
+import { Eye, X, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useAuth } from "../../contexts/AuthContext";
-import {
-  createAndSaveDMSDetails,
-  deleteDMSDetails,
-} from "../../services/dmsService";
 import { getFileIcon } from "../../utils/getFileIcon";
 import { readFileAsBase64 } from "../../utils/soapUtils";
 import LoadingSpinner from "../common/LoadingSpinner";
-import axios from "axios";
-import { getDataModelService } from "@/services/dataModelService";
 import { Button } from "../ui/button";
-import { toast } from "@/hooks/use-toast";
 import { Separator } from "../ui/separator";
 
 const DocumentUploadModal = ({
@@ -39,20 +35,22 @@ const DocumentUploadModal = ({
 
       try {
         // Fetch existing documents
-        const docsResponse = await getDataModelService(
-          {
-            DataModelName: "synmview_dms_details_all",
-            WhereCondition: `REF_SEQ_NO = ${selectedDocument.REF_SEQ_NO}`,
-            Orderby: "",
-          },
-          selectedDocument.USER_NAME,
-          userData.clientURL
+        const payload = {
+          DataModelName: "synmview_dms_details_all",
+          WhereCondition: `REF_SEQ_NO = ${selectedDocument.REF_SEQ_NO}`,
+          Orderby: "",
+        };
+
+        const response = await callSoapService(
+          userData.clientURL,
+          "DataModel_GetData",
+          payload
         );
 
         // Handle different response formats
-        const receivedDocs = Array.isArray(docsResponse)
-          ? docsResponse
-          : docsResponse?.Data || [];
+        const receivedDocs = Array.isArray(response)
+          ? response
+          : response?.Data || [];
 
         setExistingDocs(receivedDocs);
       } catch (err) {
@@ -119,15 +117,18 @@ const DocumentUploadModal = ({
 
   const refreshDocuments = async () => {
     try {
-      const response = await getDataModelService(
-        {
-          DataModelName: "SYNM_DMS_DETAILS",
-          WhereCondition: `REF_SEQ_NO = ${selectedDocument.REF_SEQ_NO}`,
-          Orderby: "",
-        },
-        userData.userEmail,
-        userData.clientURL
+      const payload = {
+        DataModelName: "SYNM_DMS_DETAILS",
+        WhereCondition: `REF_SEQ_NO = ${selectedDocument.REF_SEQ_NO}`,
+        Orderby: "",
+      };
+
+      const response = await callSoapService(
+        userData.clientURL,
+        "DataModel_GetData",
+        payload
       );
+
       const updatedDocs = Array.isArray(response)
         ? response
         : response?.Data || [];
@@ -157,14 +158,16 @@ const DocumentUploadModal = ({
   // Download & view documents
   const handleViewDocs = async (selectedDocs) => {
     try {
-      const response = await getDataModelService(
-        {
-          DataModelName: "SYNM_DMS_DETAILS",
-          WhereCondition: `REF_SEQ_NO = ${selectedDocs.REF_SEQ_NO} AND SERIAL_NO = ${selectedDocs.SERIAL_NO}`,
-          Orderby: "",
-        },
-        userData.userEmail,
-        userData.clientURL
+      const payload = {
+        DataModelName: "SYNM_DMS_DETAILS",
+        WhereCondition: `REF_SEQ_NO = ${selectedDocs.REF_SEQ_NO} AND SERIAL_NO = ${selectedDocs.SERIAL_NO}`,
+        Orderby: "",
+      };
+
+      const response = await callSoapService(
+        userData.clientURL,
+        "DataModel_GetData",
+        payload
       );
 
       if (!response?.length) {
@@ -202,14 +205,16 @@ const DocumentUploadModal = ({
     if (!window.confirm(`Delete ${doc.DOC_NAME}?`)) return;
 
     try {
-      await deleteDMSDetails(
-        {
-          userName: userData.userName,
-          refSeqNo: selectedDocument.REF_SEQ_NO,
-          serialNo: doc.SERIAL_NO,
-        },
-        userData.userEmail,
-        userData.clientURL
+      const payload = {
+        USER_NAME: userData.userName,
+        REF_SEQ_NO: selectedDocument.REF_SEQ_NO,
+        SERIAL_NO: doc.SERIAL_NO,
+      };
+
+      const response = await callSoapService(
+        userData.clientURL,
+        "DMS_Delete_DMS_Detail",
+        payload
       );
 
       await refreshDocuments();
@@ -324,10 +329,10 @@ const DocumentUploadModal = ({
           IsPrimaryDocument: file.isPrimaryDocument,
         };
 
-        await createAndSaveDMSDetails(
-          payload,
-          userData.userEmail,
-          userData.clientURL
+        const response = await callSoapService(
+          userData.clientURL,
+          "DMS_CreateAndSave_DMS_Details",
+          payload
         );
       }
 

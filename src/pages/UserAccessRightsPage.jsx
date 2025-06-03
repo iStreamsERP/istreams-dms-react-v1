@@ -179,7 +179,7 @@ const TreeView = ({
   );
 };
 
-const UserAccessRights = () => {
+const UserAccessRightsPage = () => {
   const [userDetails, setUserDetails] = useState({ USER_NAME: "" });
   const [usersList, setUsersList] = useState([]);
   const [userRoles, setUserRoles] = useState([]);
@@ -889,4 +889,4 @@ const UserAccessRights = () => {
   );
 };
 
-export default UserAccessRights;
+export default UserAccessRightsPage;

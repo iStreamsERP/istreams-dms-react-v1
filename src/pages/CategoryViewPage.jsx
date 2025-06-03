@@ -1,12 +1,11 @@
 import GlobalSearchInput from "@/components/GlobalSearchInput";
 import { Card } from "@/components/ui/card";
+import { callSoapService } from "@/services/callSoapService";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { BarLoader } from "react-spinners";
 import TimeRangeSelector from "../components/TimeRangeSelector";
 import { useAuth } from "../contexts/AuthContext";
-import { getCategoriesSummary } from "../services/dmsService";
-import { callSoapService } from "@/services/callSoapService";
 
 const CategoryViewPage = () => {
   const { userData } = useAuth();

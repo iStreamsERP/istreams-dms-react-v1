@@ -54,18 +54,18 @@ export const Header = ({ collapsed, setCollapsed }) => {
       {/* Left Side: Logo & Collapse Button */}
       <div className="flex items-center gap-2">
         <Button variant="ghost" onClick={() => setCollapsed(!collapsed)}>
-          <PanelLeftClose className={`transition-transform ${collapsed ? "rotate-180" : ""}`} />
+          <PanelLeftClose
+            className={`transition-transform ${collapsed ? "rotate-180" : ""}`}
+          />
         </Button>
         <div className="hidden md:flex items-center gap-4">
           <Link
             to="/"
             className="text-sm font-semibold whitespace-nowrap hover:text-primary transition-colors"
           >
-            iStreams ERP Solutions - DMS
+            Document Management System
           </Link>
-          <Badge>
-            {userData.isAdmin ? "Admin Mode" : "User Mode"}
-          </Badge>
+          <Badge>{userData.isAdmin ? "Admin Mode" : "User Mode"}</Badge>
         </div>
       </div>
 
@@ -76,12 +76,19 @@ export const Header = ({ collapsed, setCollapsed }) => {
         </div>
 
         {/* Theme Toggle */}
-        <Button variant="ghost" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+        <Button
+          variant="ghost"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
           {theme === "dark" ? <CloudSun /> : <CloudMoon />}
         </Button>
 
         {/* Fullscreen Toggle */}
-        <Button variant="ghost" className="hidden md:inline-flex" onClick={toggleFullScreen}>
+        <Button
+          variant="ghost"
+          className="hidden md:inline-flex"
+          onClick={toggleFullScreen}
+        >
           {isFullscreen ? <Minimize /> : <Maximize />}
         </Button>
 
@@ -94,7 +101,9 @@ export const Header = ({ collapsed, setCollapsed }) => {
             </Avatar>
             <div className="hidden sm:flex flex-col items-start">
               <span className="text-sm font-semibold">{userData.userName}</span>
-              <span className="text-xs text-muted-foreground">{userData.userEmail}</span>
+              <span className="text-xs text-muted-foreground">
+                {userData.userEmail}
+              </span>
             </div>
           </DropdownMenuTrigger>
 
@@ -102,7 +111,9 @@ export const Header = ({ collapsed, setCollapsed }) => {
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium">{userData.userName}</p>
-                <p className="text-xs text-muted-foreground">{userData.userEmail}</p>
+                <p className="text-xs text-muted-foreground">
+                  {userData.userEmail}
+                </p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -116,13 +127,8 @@ export const Header = ({ collapsed, setCollapsed }) => {
                   Account Settings <Settings2 size={16} />
                 </div>
               </DropdownMenuItem>
-              <DropdownMenuItem disabled>
-                Theme
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={handleLogout}
-                className="text-red-600"
-              >
+              <DropdownMenuItem disabled>Theme</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                 <div className="flex justify-between items-center w-full">
                   Log out <LogOut size={16} />
                 </div>

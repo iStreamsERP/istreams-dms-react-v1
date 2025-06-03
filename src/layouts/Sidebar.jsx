@@ -1,5 +1,5 @@
-import logoDark from "@/assets/logo-dark.png";
-import logoLight from "@/assets/logo-light.png";
+import logoDark from "@/assets/logo-dark.jpg";
+import logoLight from "@/assets/logo-light.jpg";
 import { getNavbarLinks } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -26,16 +26,16 @@ export const Sidebar = forwardRef(({ collapsed }, ref) => {
         collapsed ? "max-md:-left-full" : "max-md:left-0"
       )}
     >
-      <div className="flex gap-x-3 p-3 mx-auto">
+      <div className="flex gap-x-3 p-3 h-20 mx-auto">
         <img
           src={logoLight}
           alt="iStreams ERP Solutions | CRM"
-          className="dark:hidden"
+          className="dark:hidden object-fill"
         />
         <img
           src={logoDark}
           alt="iStreams ERP Solutions | CRM"
-          className="hidden dark:block"
+          className="hidden dark:block object"
         />
       </div>
 

@@ -32,7 +32,6 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PacmanLoader } from "react-spinners";
 import { useAuth } from "../contexts/AuthContext";
-import { deleteDMSMaster } from "../services/dmsService";
 import DocumentFormModal from "./dialog/DocumentFormModal";
 import DocumentUploadModal from "./dialog/DocumentUploadModal";
 import { Badge } from "./ui/badge";
@@ -108,7 +107,7 @@ const DocumentTable = ({ fetchDataRef, globalFilter, setGlobalFilter }) => {
     }
   };
 
-const canCurrentUserEdit = (doc) => {
+  const canCurrentUserEdit = (doc) => {
     if (doc?.USER_NAME !== userData.userName)
       return "Access Denied: This document is created by another user.";
 
@@ -162,10 +161,11 @@ const canCurrentUserEdit = (doc) => {
           USER_NAME: doc.USER_NAME,
           REF_SEQ_NO: doc.REF_SEQ_NO,
         };
-        const response = await deleteDMSMaster(
-          payload,
-          userData.userEmail,
-          userData.clientURL
+
+        const response = await callSoapService(
+          userData.clientURL,
+          "DMS_Delete_DMS_Master",
+          payload
         );
 
         setDocumentList((prevData) =>
@@ -173,7 +173,6 @@ const canCurrentUserEdit = (doc) => {
         );
 
         toast({
-          variant: "destructive",
           title: "Document deleted successfully.",
           description:
             typeof response === "string" ? response : "Document deleted.",
@@ -233,9 +232,7 @@ const canCurrentUserEdit = (doc) => {
             title={row.getValue("USER_NAME")}
           >
             <div>
-              <p className="text-xs truncate">
-                {row.getValue("USER_NAME")}
-              </p>
+              <p className="text-xs truncate">{row.getValue("USER_NAME")}</p>
             </div>
           </div>
         ),
@@ -324,9 +321,7 @@ const canCurrentUserEdit = (doc) => {
       },
       {
         header: () => (
-          <p className="text-xs text-gray-600 text-right w-full">
-            Docs
-          </p>
+          <p className="text-xs text-gray-600 text-right w-full">Docs</p>
         ),
         accessorKey: "NO_OF_DOCUMENTS",
         cell: (info) => {
