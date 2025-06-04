@@ -35,7 +35,7 @@ export const Sidebar = forwardRef(({ collapsed }, ref) => {
         <img
           src={logoDark}
           alt="iStreams ERP Solutions | CRM"
-          className="hidden dark:block object"
+          className="hidden dark:block object-fill"
         />
       </div>
 

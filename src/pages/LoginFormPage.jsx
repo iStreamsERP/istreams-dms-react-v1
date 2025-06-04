@@ -63,7 +63,10 @@ const LoginFormPage = () => {
         LoginUserName: email,
       };
 
-localStorage.setItem("doConnectionPayload", JSON.stringify(doConnectionPayload));
+      localStorage.setItem(
+        "doConnectionPayload",
+        JSON.stringify(doConnectionPayload)
+      );
       try {
         // Step 1: Connect to public service.
         const publicDoConnectionResponse = await callSoapService(
@@ -192,21 +195,21 @@ localStorage.setItem("doConnectionPayload", JSON.stringify(doConnectionPayload))
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 h-screen">
       <div className="hidden lg:flex flex-col justify-between p-10 bg-slate-200 dark:bg-slate-900">
-        <div>
+        <div className="flex gap-x-3 h-20">
           <img
             src={logoLight}
             alt="iStreams ERP Solutions | CRM"
-            className="dark:hidden"
+            className="dark:hidden object-fill"
           />
           <img
             src={logoDark}
             alt="iStreams ERP Solutions | CRM"
-            className="hidden dark:block"
+            className="hidden dark:block object-fill"
           />
         </div>
 
         <div>
-          <Lottie options={defaultOptions} height={350} width={400} />
+          <Lottie options={defaultOptions} />
         </div>
 
         <div>
