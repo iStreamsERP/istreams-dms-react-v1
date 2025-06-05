@@ -48,12 +48,14 @@ const DocumentFormModal = ({
     DOC_RELATED_TO: "",
     DOC_RELATED_CATEGORY: "",
     DOC_REF_VALUE: "",
+    DOC_TAGS: "",
     X_VENDOR_ID: "",
     X_VENDOR_NAME: "",
     X_CLIENT_ID: "",
     X_CLIENT_NAME: "",
     COMMENTS: "",
-    EXPIRY_DATE: new Date().toISOString().split("T")[0],
+    EXPIRY_DATE: "",
+    ENT_DATE: new Date().toISOString().split("T")[0],
     REF_TASK_ID: 0,
     FOR_THE_USERS: "",
     USER_NAME: userData.userName,
@@ -687,44 +689,37 @@ const DocumentFormModal = ({
                       <div className="flex items-center gap-2 text-sm">
                         <LocateFixed className="h-4 w-4 text-gray-600" />
                         <Label htmlFor="DOC_REF_VALUE">
-                          Document Reference Value / Tag
+                          Document Reference For
                         </Label>
                       </div>
                       <Input
                         type="text"
                         name="DOC_REF_VALUE"
                         id="DOC_REF_VALUE"
-                        placeholder="Enter docs ref no / tag"
+                        placeholder="ex: emp no, project no etc."
                         value={formData.DOC_REF_VALUE}
                         onChange={handleChange}
                         readOnly={isReadOnly}
                       />
                     </div>
 
-                    {/* Client ID */}
+                    {/* Document Tag */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm">
-                        <FileText className="h-4 w-4 text-gray-600" />
-                        <Label htmlFor="X_CLIENT_ID">Client ID</Label>
+                        <LocateFixed className="h-4 w-4 text-gray-600" />
+                        <Label htmlFor="DOC_TAGS">
+                          Document Tags For Filter
+                        </Label>
                       </div>
-                      <select
-                        name="X_CLIENT_ID"
-                        id="X_CLIENT_ID"
-                        value={formData.X_CLIENT_ID}
+                      <Input
+                        type="text"
+                        name="DOC_TAGS"
+                        id="DOC_TAGS"
+                        placeholder="Enter tags"
+                        value={formData.DOC_TAGS}
                         onChange={handleChange}
-                        disabled={isReadOnly}
-                        className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                      >
-                        <option value="">Select client id</option>
-                        {clientData.list.map((client) => (
-                          <option
-                            key={client.CLIENT_ID}
-                            value={client.CLIENT_ID}
-                          >
-                            {client.CLIENT_ID}
-                          </option>
-                        ))}
-                      </select>
+                        readOnly={isReadOnly}
+                      />
                     </div>
 
                     {/* Client Name */}
@@ -748,32 +743,6 @@ const DocumentFormModal = ({
                             value={client.CLIENT_NAME}
                           >
                             {client.CLIENT_NAME}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Vendor ID */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <FileText className="h-4 w-4 text-gray-600" />
-                        <Label htmlFor="X_VENDOR_ID">Vendor ID</Label>
-                      </div>
-                      <select
-                        name="X_VENDOR_ID"
-                        id="X_VENDOR_ID"
-                        value={formData.X_VENDOR_ID}
-                        onChange={handleChange}
-                        disabled={isReadOnly}
-                        className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                      >
-                        <option value="">Select vendor id</option>
-                        {vendorData.list.map((vendor) => (
-                          <option
-                            key={vendor.VENDOR_ID}
-                            value={vendor.VENDOR_ID}
-                          >
-                            {vendor.VENDOR_ID}
                           </option>
                         ))}
                       </select>
