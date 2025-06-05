@@ -18,7 +18,7 @@ const TeamsPage = () => {
     const fetchUsersAndImages = async () => {
       try {
         const payloadUserName = userData.isAdmin ? "" : userData.userName;
-        
+
         const payload = {
           UserName: payloadUserName,
         };
@@ -92,7 +92,9 @@ const TeamsPage = () => {
 
   return (
     <div className="grid grid-cols-1 gap-4">
-      <GlobalSearchInput value={globalFilter} onChange={setGlobalFilter} />
+      <div className="w-full lg:w-1/2">
+        <GlobalSearchInput value={globalFilter} onChange={setGlobalFilter} />
+      </div>
 
       {loading ? (
         <div className="flex justify-center items-start">
