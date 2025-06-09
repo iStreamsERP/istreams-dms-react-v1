@@ -5,13 +5,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { ChevronDownIcon } from "lucide-react"; // assuming this is used for the dropdown
 import PropTypes from "prop-types";
-import React, { forwardRef } from "react";
+import React, { forwardRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 
 export const Sidebar = forwardRef(({ collapsed }, ref) => {
   const { userData } = useAuth();
-  const [expandedMenu, setExpandedMenu] = React.useState(null);
-  const navbarLinks = getNavbarLinks(userData.isAdmin);
+  const [expandedMenu, setExpandedMenu] = useState(null);
+  // const navbarLinks = getNavbarLinks(userData.isAdmin);
+  const navbarLinks = getNavbarLinks(true);
 
   const toggleMenu = (label) => {
     setExpandedMenu((current) => (current === label ? null : label));

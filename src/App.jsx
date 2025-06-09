@@ -45,20 +45,15 @@ const App = () => {
           children: [
             { index: true, element: <DashboardPage /> },
 
-            ...(userData.isAdmin
-              ? [{ path: "/teams", element: <TeamsPage /> }]
-              : []),
+            { path: "/teams", element: <TeamsPage /> },
             { path: "/category-view", element: <CategoryViewPage /> },
             { path: "/document-list", element: <DocumentListPage /> },
             { path: "/document-view", element: <DocumentViewPage /> },
-
             { path: "task-view", element: <TaskViewPage /> },
+
             { path: "users", element: <UserListPage /> },
             { path: "user-role", element: <UserRolePage /> },
-            {
-              path: "category-access-rights",
-              element: <CategoryAccessRightsPage />,
-            },
+            { path: "category-access-rights", element: <CategoryAccessRightsPage /> },
             { path: "user-access-rights", element: <UserAccessRightsPage /> },
             { path: "role-access-rights", element: <RoleAccessRightsPage /> },
             { path: "category-master", element: <CategoryMasterPage /> },
