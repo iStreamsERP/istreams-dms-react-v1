@@ -441,8 +441,8 @@ const UserRolePage = () => {
   const canSaveConfiguration = isRoleSaved && selectedUsers.length > 0;
 
      if (!userData?.isAdmin) {
-      return <AccessDenied />;
-    }
+    return <AccessDenied />;
+  }
 
   return (
     <div className="flex flex-col gap-6">

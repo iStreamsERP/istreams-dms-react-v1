@@ -1,3 +1,4 @@
+import AccessDenied from "@/components/AccessDenied";
 import GlobalSearchInput from "@/components/GlobalSearchInput";
 import { useToast } from "@/hooks/use-toast";
 import { callSoapService } from "@/services/callSoapService";
@@ -10,84 +11,116 @@ const TeamsPage = () => {
   const { userData } = useAuth();
   const { toast } = useToast();
 
+  const [userRights, setUserRights] = useState("");
+  const [rightsChecked, setRightsChecked] = useState(false);
+
   const [usersData, setUsersData] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUsersAndImages = async () => {
-      try {
-        const payloadUserName = userData.isAdmin ? "" : userData.userName;
-
-        const payload = {
-          UserName: payloadUserName,
-        };
-
-        const userDetails = await callSoapService(
-          userData.clientURL,
-          "DMS_Get_All_ActiveUsers",
-          payload
-        );
-
-        let usersArray = [];
-
-        if (userDetails && Array.isArray(userDetails)) {
-          usersArray = userDetails;
-        } else {
-          usersArray = userDetails ? [userDetails] : [];
-        }
-
-        const usersWithImages = await Promise.all(
-          usersArray.map(async (user) => {
-            try {
-              const payload = {
-                EmpNo: user.emp_no,
-              };
-
-              const imageData = await callSoapService(
-                userData.clientURL,
-                "getpic_bytearray",
-                payload
-              );
-
-              return {
-                ...user,
-                image: imageData
-                  ? `data:image/jpeg;base64,${imageData}`
-                  : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbBa24AAg4zVSuUsL4hJnMC9s3DguLgeQmZA&s",
-              };
-            } catch (error) {
-              console.error(
-                `Error fetching image for user ${user.emp_no}:`,
-                error
-              );
-              return {
-                ...user,
-                image:
-                  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbBa24AAg4zVSuUsL4hJnMC9s3DguLgeQmZA&s",
-              };
-            }
-          })
-        );
-
-        setUsersData(usersWithImages);
-      } catch (error) {
-        console.error("Failed to fetch users:", error);
-        toast({
-          variant: "destructive",
-          title: error,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsersAndImages();
+    fetchUserRights();
   }, [userData.userEmail]);
 
+  const fetchUsersAndImages = async () => {
+    try {
+      const payloadUserName = userData.isAdmin ? "" : userData.userName;
+
+      const payload = {
+        UserName: payloadUserName,
+      };
+
+      const userDetails = await callSoapService(
+        userData.clientURL,
+        "DMS_Get_All_ActiveUsers",
+        payload
+      );
+
+      let usersArray = [];
+
+      if (userDetails && Array.isArray(userDetails)) {
+        usersArray = userDetails;
+      } else {
+        usersArray = userDetails ? [userDetails] : [];
+      }
+
+      const usersWithImages = await Promise.all(
+        usersArray.map(async (user) => {
+          try {
+            const payload = {
+              EmpNo: user.emp_no,
+            };
+
+            const imageData = await callSoapService(
+              userData.clientURL,
+              "getpic_bytearray",
+              payload
+            );
+
+            return {
+              ...user,
+              image: imageData
+                ? `data:image/jpeg;base64,${imageData}`
+                : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbBa24AAg4zVSuUsL4hJnMC9s3DguLgeQmZA&s",
+            };
+          } catch (error) {
+            console.error(
+              `Error fetching image for user ${user.emp_no}:`,
+              error
+            );
+            return {
+              ...user,
+              image:
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbBa24AAg4zVSuUsL4hJnMC9s3DguLgeQmZA&s",
+            };
+          }
+        })
+      );
+
+      setUsersData(usersWithImages);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+      toast({
+        variant: "destructive",
+        title: error,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserRights = async () => {
+    try {
+      const userType = userData.isAdmin ? "ADMINISTRATOR" : "USER";
+      const payload = {
+        UserName: userData.userName,
+        FormName: "DMS-TEAMSFULLVIEW",
+        FormDescription: "Teams All Users",
+        UserType: userType,
+      };
+
+      const response = await callSoapService(
+        userData.clientURL,
+        "DMS_CheckRights_ForTheUser",
+        payload
+      );
+
+      setUserRights(response);
+    } catch (error) {
+      console.error("Failed to fetch user rights:", error);
+      toast({
+        variant: "destructive",
+        title: error,
+      });
+    } finally {
+      setRightsChecked(true);
+    }
+  };
+
   const filteredUsersData = usersData.filter((user) => {
-    const search = globalFilter.toLowerCase();
-    return user.user_name.toLowerCase().includes(search);
+    const search = globalFilter?.toLowerCase();
+    return user.user_name?.toLowerCase()?.includes(search);
   });
 
   return (
@@ -96,10 +129,12 @@ const TeamsPage = () => {
         <GlobalSearchInput value={globalFilter} onChange={setGlobalFilter} />
       </div>
 
-      {loading ? (
+      {!rightsChecked || loading ? (
         <div className="flex justify-center items-start">
           <BarLoader color="#36d399" height={2} width="100%" />
         </div>
+      ) : userRights !== "Allowed" ? (
+        <AccessDenied />
       ) : usersData.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredUsersData.map((user, index) => (

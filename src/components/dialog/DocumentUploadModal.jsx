@@ -25,44 +25,73 @@ const DocumentUploadModal = ({
   const [errorMsg, setErrorMsg] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [userViewRights, setUserViewRights] = useState("");
+
   // Fetch existing documents and categories
   useEffect(() => {
-    const fetchData = async () => {
-      if (!selectedDocument?.REF_SEQ_NO) return;
-
-      setIsLoadingDocs(true);
-      setFetchError("");
-
-      try {
-        // Fetch existing documents
-        const payload = {
-          DataModelName: "synmview_dms_details_all",
-          WhereCondition: `REF_SEQ_NO = ${selectedDocument.REF_SEQ_NO}`,
-          Orderby: "",
-        };
-
-        const response = await callSoapService(
-          userData.clientURL,
-          "DataModel_GetData",
-          payload
-        );
-
-        // Handle different response formats
-        const receivedDocs = Array.isArray(response)
-          ? response
-          : response?.Data || [];
-
-        setExistingDocs(receivedDocs);
-      } catch (err) {
-        console.error("Fetch existing docs error:", err);
-        setFetchError("Failed to load existing documents");
-      } finally {
-        setIsLoadingDocs(false);
-      }
-    };
-
     fetchData();
+    fetchUserViewRights();
   }, [selectedDocument?.REF_SEQ_NO, userData.userEmail]);
+
+  const fetchData = async () => {
+    if (!selectedDocument?.REF_SEQ_NO) return;
+
+    setIsLoadingDocs(true);
+    setFetchError("");
+
+    try {
+      // Fetch existing documents
+      const payload = {
+        DataModelName: "synmview_dms_details_all",
+        WhereCondition: `REF_SEQ_NO = ${selectedDocument.REF_SEQ_NO}`,
+        Orderby: "",
+      };
+
+      const response = await callSoapService(
+        userData.clientURL,
+        "DataModel_GetData",
+        payload
+      );
+
+      // Handle different response formats
+      const receivedDocs = Array.isArray(response)
+        ? response
+        : response?.Data || [];
+
+      setExistingDocs(receivedDocs);
+    } catch (err) {
+      console.error("Fetch existing docs error:", err);
+      setFetchError("Failed to load existing documents");
+    } finally {
+      setIsLoadingDocs(false);
+    }
+  };
+
+  const fetchUserViewRights = async () => {
+    try {
+      const userType = userData.isAdmin ? "ADMINISTRATOR" : "USER";
+      const payload = {
+        UserName: userData.userName,
+        FormName: "DMS-DOCUMENTLISTVIEWALL",
+        FormDescription: "View Rights For All Documents",
+        UserType: userType,
+      };
+
+      const response = await callSoapService(
+        userData.clientURL,
+        "DMS_CheckRights_ForTheUser",
+        payload
+      );
+
+      setUserViewRights(response);
+    } catch (error) {
+      console.error("Failed to fetch user rights:", error);
+      toast({
+        variant: "destructive",
+        title: error,
+      });
+    }
+  };
 
   const allowedMimeTypes = {
     "image/*": [],
@@ -157,6 +186,13 @@ const DocumentUploadModal = ({
 
   // Download & view documents
   const handleViewDocs = async (selectedDocs) => {
+    const hasAccess = String(userViewRights).toLowerCase() === "allowed";
+
+    if (!hasAccess) {
+      alert("You don't have permission to view documents.");
+      return;
+    }
+
     try {
       const payload = {
         DataModelName: "SYNM_DMS_DETAILS",

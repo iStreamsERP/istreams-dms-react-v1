@@ -23,9 +23,13 @@ import {
   formatDateTime,
 } from "../utils/dateUtils";
 import { capitalizeFirstLetter } from "../utils/stringUtils";
+import AccessDenied from "@/components/AccessDenied";
 
 const TaskViewPage = () => {
   const { userData } = useAuth();
+
+  const [userRights, setUserRights] = useState("");
+
   const [statusFilter, setStatusFilter] = useState("all");
   // New assignment filter: "all", "assignedByMe", "assignedToMe"
   const [assignmentFilter, setAssignmentFilter] = useState("all");
@@ -42,6 +46,24 @@ const TaskViewPage = () => {
 
   const DEFAULT_IMAGE =
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbBa24AAg4zVSuUsL4hJnMC9s3DguLgeQmZA&s";
+
+  const fetchUserRights = async () => {
+    const userType = userData.isAdmin ? "ADMINISTRATOR" : "USER";
+    const payload = {
+      UserName: userData.userName,
+      FormName: "DMS-TASKVIEW",
+      FormDescription: "Task View",
+      UserType: userType,
+    };
+
+    const response = await callSoapService(
+      userData.clientURL,
+      "DMS_CheckRights_ForTheUser",
+      payload
+    );
+
+    setUserRights(response);
+  };
 
   const fetchUserTasks = useCallback(async () => {
     setLoadingTasks(true);
@@ -105,6 +127,7 @@ const TaskViewPage = () => {
   }, [userData.userEmail, userData.userName, userData.clientURL]);
 
   useEffect(() => {
+    fetchUserRights();
     fetchUserTasks();
   }, [fetchUserTasks]);
 
@@ -268,6 +291,10 @@ const TaskViewPage = () => {
 
     return null; // No buttons if conditions don't match
   };
+
+  if (userRights !== "Allowed") {
+    return <AccessDenied />;
+  }
 
   return (
     <div className="container mx-auto space-y-6">

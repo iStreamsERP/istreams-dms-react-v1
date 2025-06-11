@@ -24,6 +24,8 @@ import DocumentFormModal from "../components/dialog/DocumentFormModal";
 import TaskForm from "../components/TaskForm";
 import { useAuth } from "../contexts/AuthContext";
 import { formatDateTime } from "../utils/dateUtils";
+import { useToast } from "@/hooks/use-toast";
+import AccessDenied from "@/components/AccessDenied";
 
 // Custom hook for debounced search with transition
 const useDebounceWithTransition = (value, delay) => {
@@ -236,6 +238,11 @@ export default function DocumentViewPage() {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [docFormMode, setDocFormMode] = useState("view");
 
+   // User rights
+    const [userViewRights, setUserViewRights] = useState("");
+    const [userRights, setUserRights] = useState("");
+    const [rightsChecked, setRightsChecked] = useState(false);
+
   // Virtual scrolling
   const [visibleCount, setVisibleCount] = useState(24);
   const BATCH_SIZE = 24;
@@ -243,6 +250,7 @@ export default function DocumentViewPage() {
   const modalRefTask = useRef(null);
   const formModalRef = useRef(null);
   const { userData } = useAuth();
+   const { toast } = useToast();
   const location = useLocation();
 
   // Optimized debounced search with transition
@@ -394,6 +402,63 @@ export default function DocumentViewPage() {
     }
   }, [userData.userEmail, userData.clientURL, userData.userName]);
 
+   const fetchUserViewRights = useCallback(async () => {
+      try {
+        const userType = userData.isAdmin ? "ADMINISTRATOR" : "USER";
+        const payload = {
+          UserName: userData.userName,
+          FormName: "DMS-DOCUMENTVIEWVIEWALL",
+          FormDescription: "View Rights For All Documents View",
+          UserType: userType,
+        };
+  
+        const response = await callSoapService(
+          userData.clientURL,
+          "DMS_CheckRights_ForTheUser",
+          payload
+        );
+  
+        console.log(response);
+        
+  
+        setUserViewRights(response);
+      } catch (error) {
+        console.error("Failed to fetch user rights:", error);
+        toast({
+          variant: "destructive",
+          title: error,
+        });
+      }
+    }, [userData.clientURL, userData.isAdmin, userData.userName]);
+  
+    const fetchUserRights = useCallback(async () => {
+      try {
+        const userType = userData.isAdmin ? "ADMINISTRATOR" : "USER";
+        const payload = {
+          UserName: userData.userName,
+          FormName: "DMS-DOCUMENTVIEW",
+          FormDescription: "Document View",
+          UserType: userType,
+        };
+  
+        const response = await callSoapService(
+          userData.clientURL,
+          "DMS_CheckRights_ForTheUser",
+          payload
+        );
+  
+        setUserRights(response);
+      } catch (error) {
+        console.error("Failed to fetch user rights:", error);
+        toast({
+          variant: "destructive",
+          title: error,
+        });
+      } finally {
+        setRightsChecked(true);
+      }
+    }, [userData.clientURL, userData.isAdmin, userData.userName]);
+
   // Load more documents - simplified
   const loadMoreDocs = useCallback(() => {
     setVisibleCount((prev) => Math.min(prev + BATCH_SIZE, filteredDocs.length));
@@ -403,7 +468,9 @@ export default function DocumentViewPage() {
   useEffect(() => {
     fetchDocuments();
     fetchUsers();
-  }, [fetchDocuments, fetchUsers]);
+    fetchUserRights();
+    fetchUserViewRights();
+  }, [fetchDocuments, fetchUsers, fetchUserViewRights]);
 
   // Event handlers - optimized
   const handleVerifySuccess = useCallback((refSeqNo, verifierName) => {
@@ -425,6 +492,18 @@ export default function DocumentViewPage() {
   }, []);
 
   const handleView = useCallback((doc) => {
+     const hasAccess = String(userViewRights).toLowerCase() === "allowed";
+    
+          if (!hasAccess) {
+            toast({
+              variant: "destructive",
+              title: "Permission Denied",
+              description: "You don't have permission to view documents.",
+            });
+            return;
+          }
+    
+
     setSelectedDocument(doc);
     setDocFormMode("view");
     formModalRef.current?.showModal();
@@ -536,8 +615,8 @@ export default function DocumentViewPage() {
     setTaskData((prev) => ({ ...prev, newTask }));
   }, []);
 
-  // Show loading state
-  if (isLoading) {
+   // Show loading state
+  if (isLoading || !rightsChecked) {
     return (
       <div className="grid grid-cols-1 gap-4">
         <div className="relative">
@@ -550,6 +629,11 @@ export default function DocumentViewPage() {
         </div>
       </div>
     );
+  }
+
+  // Check user rights
+  if (String(userRights).toLowerCase() !== "allowed") {
+    return <AccessDenied />;
   }
 
   const hasMore = visibleCount < filteredDocs.length;

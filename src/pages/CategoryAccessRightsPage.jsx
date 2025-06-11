@@ -282,6 +282,7 @@ const CategoryAccessRightsPage = () => {
     setSelectedCategoryItems([]);
   };
 
+  
      if (!userData?.isAdmin) {
       return <AccessDenied />;
     }

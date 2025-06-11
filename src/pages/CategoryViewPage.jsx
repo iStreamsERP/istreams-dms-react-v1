@@ -1,24 +1,26 @@
 import GlobalSearchInput from "@/components/GlobalSearchInput";
 import { Card } from "@/components/ui/card";
-import { callSoapService } from "@/services/callSoapService";
-import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { BarLoader } from "react-spinners";
-import TimeRangeSelector from "../components/TimeRangeSelector";
-import { useAuth } from "../contexts/AuthContext";
 import {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { callSoapService } from "@/services/callSoapService";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { BarLoader } from "react-spinners";
+import TimeRangeSelector from "../components/TimeRangeSelector";
+import { useAuth } from "../contexts/AuthContext";
+import AccessDenied from "@/components/AccessDenied";
 
 const CategoryViewPage = () => {
   const { userData } = useAuth();
-  const searchInputRef = useRef(null);
+
+  const [userRights, setUserRights] = useState("");
+  const [rightsChecked, setRightsChecked] = useState(false);
 
   const [categories, setCategories] = useState([]);
   const [filterDays, setFilterDays] = useState("365");
@@ -28,18 +30,17 @@ const CategoryViewPage = () => {
   const [filterField, setFilterField] = useState("ALL");
 
   const buildFilterCond = () => {
-  if (filterField === "ALL" || globalFilter.trim() === "") {
-    return ""; // No filtering
-  }
-  return `${filterField} LIKE '%${globalFilter}%'`;
-};
-
-// console.log(buildFilterCond());
+    if (filterField === "ALL" || globalFilter.trim() === "") {
+      return ""; // No filtering
+    }
+    return `${filterField} LIKE '%${globalFilter}%'`;
+  };
 
   useEffect(() => {
     fetchData();
+    fetchUserRights();
   }, [filterField, globalFilter]);
-  
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -56,10 +57,38 @@ const CategoryViewPage = () => {
       );
 
       setCategories(response);
-      
+
       setLoading(false);
     } catch (error) {
       console.error("Error fetching dashboard summary:", error);
+    }
+  };
+
+  const fetchUserRights = async () => {
+    try {
+      const userType = userData.isAdmin ? "ADMINISTRATOR" : "USER";
+      const payload = {
+        UserName: userData.userName,
+        FormName: "DMS-CATEGORIESFORM",
+        FormDescription: "Categories View",
+        UserType: userType,
+      };
+
+      const response = await callSoapService(
+        userData.clientURL,
+        "DMS_CheckRights_ForTheUser",
+        payload
+      );
+
+      setUserRights(response);
+    } catch (error) {
+      console.error("Failed to fetch user rights:", error);
+      toast({
+        variant: "destructive",
+        title: error,
+      });
+    } finally {
+      setRightsChecked(true);
     }
   };
 
@@ -98,10 +127,12 @@ const CategoryViewPage = () => {
         </div>
       </div>
 
-      {loading ? (
+      {!rightsChecked || loading ? (
         <div className="flex justify-center items-center">
           <BarLoader color="#36d399" height={2} width="100%" />
         </div>
+      ) : userRights !== "Allowed" ? (
+        <AccessDenied />
       ) : categories.length === 0 ? (
         <p className="text-center text-sm">No data found...</p>
       ) : (
